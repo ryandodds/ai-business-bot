@@ -1,0 +1,47 @@
+{
+  "club_name": "AI for Business",
+  "meeting_schedule": "Thursdays at 6:00 PM in Crummer Hall",
+  "upcoming_events": [
+    {
+      "id": "talk-march-15",
+      "title": "From Chatbot to Checkout: Building Your First AI Commerce Agent",
+      "speaker": "Ryan Dodds",
+      "date": "March 15, 2026",
+      "time": "6:00 PM",
+      "location": "Crummer Hall Room 201",
+      "description": "Learn how to build AI agents that can handle payments and commerce transactions"
+    },
+    {
+      "id": "workshop-march-29",
+      "title": "AI in Finance Workshop",
+      "speaker": "TBD",
+      "date": "March 29, 2026",
+      "time": "6:00 PM",
+      "location": "Crummer Hall Room 201",
+      "description": "Explore how AI is transforming the financial services industry"
+    }
+  ],
+  "fundraiser": {
+    "id": "spring-mixer",
+    "name": "Spring Networking Mixer",
+    "date": "April 10, 2026",
+    "price": 15.00,
+    "currency": "usd",
+    "description": "Network with local business leaders and alumni working in AI",
+    "location": "Rollins Campus Center"
+  },
+  "faqs": [
+    {
+      "question": "How do I join the club?",
+      "answer": "Just show up to any Thursday meeting! No formal membership required."
+    },
+    {
+      "question": "Do I need coding experience?",
+      "answer": "Not at all! We welcome students from all majors interested in AI and business."
+    },
+    {
+      "question": "Are there membership fees?",
+      "answer": "No membership fees. Events and workshops are free unless otherwise noted."
+    }
+  ]
+}
