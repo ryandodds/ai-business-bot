@@ -382,17 +382,6 @@
             try {
                 const checkout = await stripe.initEmbeddedCheckout({
                     clientSecret: clientSecret,
-                    onComplete: async () => {
-                        // Destroy the checkout form
-                        checkout.destroy();
-                        container.remove();
-                        activeCheckout = null;
-                        activeCheckoutContainer = null;
-
-                        // Show success message in chat
-                        addMessage('Payment successful! Your tickets have been purchased. Check your email for confirmation details.', 'bot');
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
                 });
 
                 activeCheckout = checkout;
