@@ -238,24 +238,9 @@
         const typingIndicator = document.getElementById('typingIndicator');
 
         let conversationHistory = [];
-        let stripe = null;
+        let stripe = Stripe('pk_test_51JedskAJBOdOG1O9SQy89nqiRmjVcNJcz53Nt7nlEmfbDGKvsosWKNNF2vuPwgQf2uLPpmhlGoUSFRyVu8s5rX3m00sBSBTvmt');
         let activeCheckout = null;
         let activeCheckoutContainer = null;
-
-        // Initialize Stripe on page load
-        async function initStripe() {
-            try {
-                const response = await fetch('/api/config');
-                const { stripePublishableKey } = await response.json();
-                if (stripePublishableKey) {
-                    stripe = Stripe(stripePublishableKey);
-                }
-            } catch (error) {
-                console.error('Failed to initialize Stripe:', error);
-            }
-        }
-
-        initStripe();
 
         // Handle hash-based return URL (works on page load AND hash changes from Google Pay / redirects)
         function handleCheckoutReturn() {
