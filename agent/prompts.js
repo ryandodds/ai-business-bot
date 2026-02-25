@@ -51,8 +51,10 @@ PAYMENT HANDLING:
 When a student wants to purchase tickets to the ${clubData.fundraiser.name}:
 1. Confirm the number of tickets they want
 2. Confirm their email address
-3. Use the purchase_tickets function to process the payment
-4. Always be clear about the total cost before processing
+3. Always be clear about the total cost before processing
+4. Use the purchase_tickets function to process the payment
+5. After calling purchase_tickets, tell the user the secure checkout form will appear below your message
+6. Do NOT include any payment URLs or links in your response — the checkout form is embedded directly in the chat
 
 Be helpful and encouraging. If you don't know something, be honest about it.`;
 }

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI for Business Chat Assistant</title>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         * {
             margin: 0;
@@ -96,6 +97,16 @@
 
         .message.bot .message-content a:hover {
             color: #d99500;
+        }
+
+        .checkout-container {
+            width: 100%;
+            min-height: 350px;
+            margin: 12px 0;
+            border: 2px solid #F2A900;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
         }
 
         .typing-indicator {
@@ -194,7 +205,7 @@
             <h1>🤖 AI for Business Chat Assistant</h1>
             <p>Rollins College</p>
         </div>
-        
+
         <div class="chat-messages" id="chatMessages">
             <div class="message bot">
                 <div class="message-content">
@@ -208,11 +219,11 @@
             <span></span>
             <span></span>
         </div>
-        
+
         <div class="input-area">
-            <input 
-                type="text" 
-                id="messageInput" 
+            <input
+                type="text"
+                id="messageInput"
                 placeholder="Ask about events, speakers, or buy tickets..."
                 autocomplete="off"
             >
@@ -225,12 +236,69 @@
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const typingIndicator = document.getElementById('typingIndicator');
-        
+
         let conversationHistory = [];
+        let stripe = null;
+        let activeCheckout = null;
+        let activeCheckoutContainer = null;
+
+        // Initialize Stripe on page load
+        async function initStripe() {
+            try {
+                const response = await fetch('/api/config');
+                const { stripePublishableKey } = await response.json();
+                if (stripePublishableKey) {
+                    stripe = Stripe(stripePublishableKey);
+                }
+            } catch (error) {
+                console.error('Failed to initialize Stripe:', error);
+            }
+        }
+
+        initStripe();
+
+        // Handle hash-based return URL (works on page load AND hash changes from Google Pay / redirects)
+        function handleCheckoutReturn() {
+            if (!window.location.hash.startsWith('#/checkout-complete')) return;
+
+            const params = new URLSearchParams(window.location.hash.split('?')[1]);
+            const sessionId = params.get('session_id');
+            window.location.hash = '';
+
+            if (!sessionId) return;
+
+            // Clean up any active checkout form
+            if (activeCheckout) {
+                try { activeCheckout.destroy(); } catch (e) {}
+                activeCheckout = null;
+            }
+            if (activeCheckoutContainer) {
+                activeCheckoutContainer.remove();
+                activeCheckoutContainer = null;
+            }
+
+            // Verify payment and show success
+            fetch(`/api/checkout-status?session_id=${encodeURIComponent(sessionId)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.paid) {
+                        addMessage('Payment successful! Your tickets have been purchased. Check your email for confirmation details.', 'bot');
+                    } else {
+                        addMessage('Payment is still processing. Please check back shortly.', 'bot');
+                    }
+                })
+                .catch(() => {
+                    addMessage('Payment may have completed. Please check your email for confirmation.', 'bot');
+                });
+        }
+
+        // Run on page load and on hash changes (Google Pay redirects via hash)
+        handleCheckoutReturn();
+        window.addEventListener('hashchange', handleCheckoutReturn);
 
         // Send message when button clicked
         sendButton.addEventListener('click', sendMessage);
-        
+
         // Send message when Enter key pressed
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -272,12 +340,17 @@
                 // Add bot response
                 if (data.message) {
                     addMessage(data.message, 'bot');
-                    
+
                     // Update conversation history
                     conversationHistory.push(
                         { role: 'user', content: message },
                         { role: 'assistant', content: data.message }
                     );
+                }
+
+                // If a payment session was returned, render embedded checkout
+                if (data.paymentSession && data.paymentSession.clientSecret) {
+                    renderEmbeddedCheckout(data.paymentSession.clientSecret);
                 }
 
             } catch (error) {
@@ -290,24 +363,68 @@
             messageInput.focus();
         }
 
+        async function renderEmbeddedCheckout(clientSecret) {
+            if (!stripe) {
+                addMessage('Payment system is not available. Please try again later.', 'bot');
+                return;
+            }
+
+            // Create a container div for the checkout form
+            const container = document.createElement('div');
+            container.className = 'checkout-container';
+            container.id = 'checkout-container-' + Date.now();
+            chatMessages.appendChild(container);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Track active checkout so hash handler can clean up
+            activeCheckoutContainer = container;
+
+            try {
+                const checkout = await stripe.initEmbeddedCheckout({
+                    clientSecret: clientSecret,
+                    onComplete: async () => {
+                        // Destroy the checkout form
+                        checkout.destroy();
+                        container.remove();
+                        activeCheckout = null;
+                        activeCheckoutContainer = null;
+
+                        // Show success message in chat
+                        addMessage('Payment successful! Your tickets have been purchased. Check your email for confirmation details.', 'bot');
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                });
+
+                activeCheckout = checkout;
+                checkout.mount('#' + container.id);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (error) {
+                console.error('Error rendering checkout:', error);
+                container.remove();
+                activeCheckout = null;
+                activeCheckoutContainer = null;
+                addMessage('Sorry, there was an issue loading the payment form. Please try again.', 'bot');
+            }
+        }
+
         function addMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
-            
+
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            
+
             // Convert URLs to clickable links, excluding trailing punctuation
             const urlRegex = /(https?:\/\/[^\s<)"']+?)([.,;:!?)\]]*(?:\s|$))/g;
             const htmlContent = text.replace(urlRegex, (match, url, punctuation) => {
-                return `<a href="${url}" target="_blank">Click here to complete your payment →</a>${punctuation}`;
+                return `<a href="${url}" target="_blank">${url}</a>${punctuation}`;
             });
-            
+
             contentDiv.innerHTML = htmlContent;
-            
+
             messageDiv.appendChild(contentDiv);
             chatMessages.appendChild(messageDiv);
-            
+
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }

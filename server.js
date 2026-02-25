@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { handleChat } = require('./agent/handler');
+const { verifyPayment } = require('./payments/stripe');
 
 // Create the server
 const app = express();
@@ -15,6 +16,26 @@ app.use(express.static('public'));
 // Test route - just to make sure the server works
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is running!' });
+});
+
+// Return Stripe publishable key to the frontend
+app.get('/api/config', (req, res) => {
+  res.json({ stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY });
+});
+
+// Check checkout session status
+app.get('/api/checkout-status', async (req, res) => {
+  try {
+    const { session_id } = req.query;
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+    const result = await verifyPayment(session_id);
+    res.json(result);
+  } catch (error) {
+    console.error('Checkout status error:', error);
+    res.status(500).json({ error: 'Failed to check checkout status' });
+  }
 });
 
 // Chat endpoint - this is where messages come in
