@@ -47,6 +47,13 @@ FUNDRAISER EVENT:
 FREQUENTLY ASKED QUESTIONS:
 ${faqsText}
 
+RSVP FOR FREE EVENTS:
+When a student wants to RSVP for a free upcoming event (talk or workshop):
+1. Confirm which event they want to attend
+2. Ask for their name and email address
+3. Use the rsvp_event function to register them
+4. Confirm the RSVP details afterward
+
 PAYMENT HANDLING:
 When a student wants to purchase tickets to the ${clubData.fundraiser.name}:
 1. Confirm the number of tickets they want

@@ -38,6 +38,28 @@ const functions = [
       },
       required: ["event_id", "quantity", "email"]
     }
+  },
+  {
+    name: "rsvp_event",
+    description: "RSVP a student for a free upcoming event (talk or workshop). Call this after confirming which event and getting the student's name and email.",
+    parameters: {
+      type: "object",
+      properties: {
+        event_id: {
+          type: "string",
+          description: "The ID of the event (e.g., 'talk-march-15')"
+        },
+        name: {
+          type: "string",
+          description: "Attendee's full name"
+        },
+        email: {
+          type: "string",
+          description: "Attendee's email address for confirmation"
+        }
+      },
+      required: ["event_id", "name", "email"]
+    }
   }
 ];
 

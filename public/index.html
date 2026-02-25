@@ -197,6 +197,25 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        .agent-action {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .agent-action .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: #002855;
+            color: #F2A900;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 999px;
+            border: 1px solid #F2A900;
+        }
     </style>
 </head>
 <body>
@@ -241,6 +260,13 @@
         let stripe = Stripe('pk_test_51JedskAJBOdOG1O9SQy89nqiRmjVcNJcz53Nt7nlEmfbDGKvsosWKNNF2vuPwgQf2uLPpmhlGoUSFRyVu8s5rX3m00sBSBTvmt');
         let activeCheckout = null;
         let activeCheckoutContainer = null;
+
+        const functionLabels = {
+            get_upcoming_events: "Looking up events...",
+            get_club_info: "Retrieving club info...",
+            purchase_tickets: "Processing payment...",
+            rsvp_event: "Registering your RSVP..."
+        };
 
         // Handle hash-based return URL (works on page load AND hash changes from Google Pay / redirects)
         function handleCheckoutReturn() {
@@ -322,6 +348,11 @@
                 // Hide typing indicator
                 typingIndicator.classList.remove('active');
 
+                // Show function call indicator if a function was called
+                if (data.functionCalled && functionLabels[data.functionCalled]) {
+                    addAgentAction(functionLabels[data.functionCalled]);
+                }
+
                 // Add bot response
                 if (data.message) {
                     addMessage(data.message, 'bot');
@@ -379,6 +410,14 @@
                 activeCheckoutContainer = null;
                 addMessage('Sorry, there was an issue loading the payment form. Please try again.', 'bot');
             }
+        }
+
+        function addAgentAction(label) {
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'agent-action';
+            actionDiv.innerHTML = `<span class="badge">⚡ ${label}</span>`;
+            chatMessages.appendChild(actionDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function addMessage(text, sender) {

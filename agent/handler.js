@@ -144,6 +144,22 @@ async function executeFunction(functionName, args) {
         };
       }
 
+    case "rsvp_event":
+      const event = clubData.upcoming_events.find(e => e.id === args.event_id);
+      if (!event) {
+        return { status: "error", error: "Event not found" };
+      }
+      return {
+        status: "confirmed",
+        event_title: event.title,
+        event_date: event.date,
+        event_time: event.time,
+        event_location: event.location,
+        attendee_name: args.name,
+        attendee_email: args.email,
+        message: `RSVP confirmed for ${args.name} (${args.email}) to attend "${event.title}" on ${event.date} at ${event.time}.`
+      };
+
     default:
       return { error: "Unknown function" };
   }
